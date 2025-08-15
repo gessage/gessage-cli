@@ -1,27 +1,31 @@
 package models
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gessage/gessage/internal/ai"
 )
 
-// NewOpenAIGPT4o implements the Factory constructor for OpenAI GPT-4o.
-func NewOpenAIGPT4o(opts ai.Options) (ai.Client, error) {
-	if opts.OpenAIKey == "" {
-		return nil, fmt.Errorf("OPENAI_API_KEY is required for gpt4-o")
-	}
-	return &openaiClient{
-		apiKey:   opts.OpenAIKey,
-		endpoint: "https://api.openai.com/v1/chat/completions",
-		model:    "gpt-4o",
-	}, nil
+func init() {
+	ai.Register("gpt4-o", ai.Provider{
+		Constructor: newOpenAIFromConfig,
+		Setup:       setupOpenAI,
+	})
 }
+
+// openaiClient implements ai.Client for OpenAI chat completions
+// using a minimal subset required by this app.
+//
+// It does not stream; it requests a single completion.
+// Endpoint and model are configurable via per-model config.
 
 type openaiClient struct {
 	apiKey   string
@@ -84,4 +88,40 @@ func (c *openaiClient) Generate(ctx context.Context, prompt string, maxTokens in
 		return "", fmt.Errorf("no choices from openai")
 	}
 	return resp.Choices[0].Message.Content, nil
+}
+
+func newOpenAIFromConfig(config map[string]string) (ai.Client, error) {
+	key := strings.TrimSpace(config["api_key"])
+	if key == "" {
+		return nil, fmt.Errorf("missing api_key for gpt4-o; run 'gessage setup'")
+	}
+	endpoint := strings.TrimSpace(config["endpoint"])
+	if endpoint == "" {
+		endpoint = "https://api.openai.com/v1/chat/completions"
+	}
+	model := strings.TrimSpace(config["model"])
+	if model == "" {
+		model = "gpt-4o"
+	}
+	return &openaiClient{apiKey: key, endpoint: endpoint, model: model}, nil
+}
+
+func setupOpenAI(ctx context.Context) (map[string]string, error) {
+	in := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter OpenAI API Key (sk-...): ")
+	key, _ := in.ReadString('\n')
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return nil, fmt.Errorf("API key required")
+	}
+	fmt.Print("Model name [gpt-4o]: ")
+	model, _ := in.ReadString('\n')
+	model = strings.TrimSpace(model)
+	if model == "" {
+		model = "gpt-4o"
+	}
+	return map[string]string{
+		"api_key": key,
+		"model":   model,
+	}, nil
 }

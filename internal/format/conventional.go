@@ -32,7 +32,8 @@ Constraints:
 - types allowed: ` + typeList + `
 Output format:
 - First line: "<type>(optional scope): <title>"
-- Optional body: wrapped to ` + strconv.Itoa(in.MaxBody) + ` columns; include bullet points if helpful.
+- Optional body: wrapped to ` + strconv.Itoa(in.MaxBody) + ` columns.
+- Output ONLY the commit message. No steps, no tables, no quotes, no extra text.
 - Do not include code fences, backticks, or explanations.
 
 ` + hint + `
@@ -53,28 +54,71 @@ func NormalizeMessage(msg string, opt NormalizeOptions) string {
 	msg = strings.TrimSpace(msg)
 	msg = stripNonCommitNoise(msg)
 
+	// Pick the first line that looks like a proper Conventional Commit title
 	lines := strings.Split(msg, "\n")
-	if len(lines) == 0 || strings.TrimSpace(lines[0]) == "" {
+	titleIdx := -1
+	var title string
+	titleRe := regexp.MustCompile(`(?i)^(feat|fix|refactor|docs|chore|style|test|perf)(\([^)]+\))?:\s+.+$`)
+	for i, ln := range lines {
+		l := strings.TrimSpace(ln)
+		if l == "" {
+			continue
+		}
+		if titleRe.MatchString(l) {
+			titleIdx = i
+			title = l
+			break
+		}
+	}
+	if titleIdx == -1 {
+		// fallback: use first non-empty line as title
+		for _, ln := range lines {
+			l := strings.TrimSpace(ln)
+			if l != "" {
+				title = l
+				break
+			}
+		}
+	}
+	if title == "" {
 		return opt.DefaultType + ": update"
 	}
 
-	first := strings.TrimSpace(lines[0])
-	ty := leadingType(first)
+	ty := leadingType(title)
 	if !containsCaseInsensitive(opt.Types, ty) {
-		first = opt.DefaultType + ": " + first
+		title = opt.DefaultType + ": " + title
 	}
-	if len(first) > opt.MaxTitle {
-		first = first[:opt.MaxTitle]
+	if len(title) > opt.MaxTitle {
+		title = title[:opt.MaxTitle]
 	}
 
-	body := strings.Join(lines[1:], "\n")
+	// Body is the text after the title, filtered to remove instructions/tables
+	var bodyLines []string
+	if titleIdx >= 0 && titleIdx+1 < len(lines) {
+		for _, ln := range lines[titleIdx+1:] {
+			t := strings.TrimSpace(ln)
+			if t == "" {
+				bodyLines = append(bodyLines, "")
+				continue
+			}
+			// Drop tables and numbered instructions
+			if strings.HasPrefix(t, "|") || regexp.MustCompile(`^\d+\.`).MatchString(t) {
+				continue
+			}
+			if strings.Contains(strings.ToLower(t), "conventional commit") && (strings.Contains(strings.ToLower(t), "generate") || strings.Contains(strings.ToLower(t), "steps")) {
+				continue
+			}
+			bodyLines = append(bodyLines, t)
+		}
+	}
+	body := strings.Join(bodyLines, "\n")
 	body = wrapLines(body, opt.MaxBody)
-	body = strings.TrimRight(body, "\n")
+	body = strings.TrimSpace(body)
 
-	if strings.TrimSpace(body) == "" {
-		return first
+	if body == "" {
+		return title
 	}
-	return first + "\n\n" + body
+	return title + "\n\n" + body
 }
 
 func FallbackFromDiff(diff string) string {
@@ -125,7 +169,7 @@ func wrapLines(s string, width int) string {
 }
 
 func leadingType(first string) string {
-	re := regexp.MustCompile(`^([a-z]+)($begin:math:text$[\\w\\-\\./]+$end:math:text$)?:`)
+	re := regexp.MustCompile(`^([a-z]+)(\([\w\-\./]+\))?:`)
 	m := re.FindStringSubmatch(strings.ToLower(first))
 	if len(m) >= 2 {
 		return m[1]
@@ -146,12 +190,17 @@ func containsCaseInsensitive(arr []string, v string) bool {
 func stripNonCommitNoise(s string) string {
 	// Remove triple backticks blocks if model mistakenly added them
 	s = regexp.MustCompile("(?s)```.*?```").ReplaceAllString(s, "")
-	// Keep only first non-empty block
-	parts := strings.Split(strings.TrimSpace(s), "\n\n")
-	if len(parts) > 0 {
-		return strings.TrimSpace(parts[0] + "\n\n" + strings.Join(parts[1:], "\n"))
+	// Remove markdown tables
+	lines := strings.Split(strings.TrimSpace(s), "\n")
+	var out []string
+	for _, ln := range lines {
+		t := strings.TrimSpace(ln)
+		if strings.HasPrefix(t, "|") {
+			continue
+		}
+		out = append(out, ln)
 	}
-	return s
+	return strings.Join(out, "\n")
 }
 
 func countDiffStats(diff string) (added, removed int, files []string) {
