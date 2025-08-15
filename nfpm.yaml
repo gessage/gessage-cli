@@ -1,0 +1,14 @@
+name: gessage
+arch: amd64
+platform: linux
+version: 1.0.0
+section: utils
+priority: extra
+maintainer: "Pooya Karimi <ispooya@gmail.com>"
+description: |
+  AI-powered commit message generator.
+homepage: "https://github.com/gessage"
+license: MIT
+contents:
+  - src: bin/gessage-linux-amd64
+    dst: /usr/local/bin/gessage
