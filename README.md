@@ -1,4 +1,4 @@
-# gessage
+# gessage CLI
 
 Generate high-quality Conventional Commit messages from staged diffs using GPT‑4o (OpenAI) or local Ollama. Cross-platform, clean architecture, safe by default (secrets redaction), and fully extensible.
 

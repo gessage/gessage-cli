@@ -169,27 +169,26 @@ func setupOllama(ctx context.Context) (map[string]string, error) {
 		if !pingOllama(ctx, host, 2*time.Second) {
 			ok, _ := confirm(in, "Ollama server not detected. Start it now? (Download 1.9GB) [y/N]: ")
 			if ok {
-				started := false
-				if runtime.GOOS == "darwin" {
-					if _, berr := exec.LookPath("brew"); berr == nil {
-						fmt.Println("Starting via Homebrew services: brew services start ollama")
-						cmd := exec.CommandContext(ctx, "brew", "services", "start", "ollama")
-						cmd.Stdin = os.Stdin
-						cmd.Stdout = os.Stdout
-						cmd.Stderr = os.Stderr
-						if err := cmd.Run(); err == nil {
-							started = true
+				// Prefer starting a quiet local serve we control (set low log level), fallback to brew services
+				fmt.Println("Starting 'ollama serve' in background...")
+				cmd := exec.CommandContext(ctx, "ollama", "serve")
+				cmd.Env = append(os.Environ(), "OLLAMA_LOG_LEVEL=error", "OLLAMA_NO_COLOR=1")
+				cmd.Stdin = nil
+				cmd.Stdout = io.Discard
+				cmd.Stderr = io.Discard
+				_ = cmd.Start()
+				time.Sleep(2 * time.Second)
+				if !pingOllama(ctx, host, 2*time.Second) {
+					if runtime.GOOS == "darwin" {
+						if _, berr := exec.LookPath("brew"); berr == nil {
+							fmt.Println("Starting via Homebrew services: brew services start ollama")
+							b := exec.CommandContext(ctx, "brew", "services", "start", "ollama")
+							b.Stdin = os.Stdin
+							b.Stdout = os.Stdout
+							b.Stderr = os.Stderr
+							_ = b.Run()
 						}
 					}
-				}
-				if !started {
-					fmt.Println("Starting 'ollama serve' in background...")
-					cmd := exec.CommandContext(ctx, "ollama", "serve")
-					cmd.Stdin = nil
-					cmd.Stdout = io.Discard
-					cmd.Stderr = io.Discard
-					_ = cmd.Start()
-					time.Sleep(2 * time.Second)
 				}
 			}
 			deadline := time.Now().Add(10 * time.Second)
