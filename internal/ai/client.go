@@ -26,4 +26,8 @@ type Provider struct {
 	// Implementations should be best-effort and safe to call when nothing is running.
 	// If nil, the CLI treats it as a no-op.
 	Stop func(ctx context.Context, config map[string]string) error
+
+	// Variants optionally returns a list of selectable model identifiers/versions
+	// for this provider. If nil, the CLI will prompt for a free-form identifier.
+	Variants func() []string
 }

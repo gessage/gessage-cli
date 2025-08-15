@@ -58,7 +58,7 @@ func (a *App) Run(ctx context.Context, argv []string) error {
 	fs.Usage = printRootUsage
 
 	var (
-		flagModel     = fs.String("model", "", "AI model to use (e.g., gpt4-o, ollama)")
+		flagModel     = fs.String("model", "", "AI model to use (e.g., gpt4-o, openrouter, ollama)")
 		flagAuto      = fs.Bool("auto", true, "Auto-select model based on diff size (overrides --model if needed)")
 		flagType      = fs.String("type", "", "Conventional commit type override (feat, fix, refactor, docs, chore, style, test, perf)")
 		flagNoCommit  = fs.Bool("no-commit", false, "Do not run `git commit`; just print the message")
@@ -330,7 +330,7 @@ func (a *App) runDefault(ctx context.Context, argv []string) error {
 		return err
 	}
 
-	// Choose model
+	// Choose provider
 	modelName := strings.TrimSpace(*flagModel)
 	if modelName == "" {
 		known := ai.Known()
@@ -346,33 +346,49 @@ func (a *App) runDefault(ctx context.Context, argv []string) error {
 			}
 			opts = append(opts, fmt.Sprintf("%s%s", m, mark))
 		}
-		idx, selErr := ui.Select("Select default model:", opts, 0)
+		idx, selErr := ui.Select("Select default provider:", opts, 0)
 		if selErr != nil {
 			return selErr
 		}
 		modelName = known[idx]
 	}
 
-	// Determine version to set in provider config
+	// Choose variant if provider exposes variants; else prompt free-form or use existing
+	prov, ok := ai.ProviderFor(modelName)
+	if !ok {
+		return fmt.Errorf("unknown model %q; known: %v", modelName, ai.Known())
+	}
 	mcfg := cfg.Models[modelName]
 	if mcfg == nil {
 		mcfg = map[string]string{}
 	}
-	current := strings.TrimSpace(mcfg["model"]) // both providers use key "model"
 	version := strings.TrimSpace(*flagVersion)
 	if version == "" {
-		reader := bufio.NewReader(os.Stdin)
-		prompt := "Model identifier"
-		if current != "" {
-			prompt += " [" + current + "]: "
-		} else {
-			prompt += ": "
+		if prov.Variants != nil {
+			variants := prov.Variants()
+			if len(variants) > 0 {
+				idx, selErr := ui.Select("Select default model for "+modelName+":", variants, 0)
+				if selErr != nil {
+					return selErr
+				}
+				version = variants[idx]
+			}
 		}
-		fmt.Print(prompt)
-		line, _ := reader.ReadString('\n')
-		version = strings.TrimSpace(line)
-		if version == "" {
-			version = current
+		if version == "" { // fallback to prompt
+			reader := bufio.NewReader(os.Stdin)
+			current := strings.TrimSpace(mcfg["model"])
+			prompt := "Model identifier"
+			if current != "" {
+				prompt += " [" + current + "]: "
+			} else {
+				prompt += ": "
+			}
+			fmt.Print(prompt)
+			line, _ := reader.ReadString('\n')
+			version = strings.TrimSpace(line)
+			if version == "" {
+				version = current
+			}
 		}
 	}
 
@@ -421,7 +437,7 @@ func printRootUsage() {
 	fmt.Println()
 
 	section.Println("Flags:")
-	fmt.Println("  ", flagC.Sprint("--model string"), dim.Sprint("     AI model to use (e.g., gpt4-o, ollama)"))
+	fmt.Println("  ", flagC.Sprint("--model string"), dim.Sprint("     AI model to use (e.g., gpt4-o, openrouter, ollama)"))
 	fmt.Println("  ", flagC.Sprint("--auto"), dim.Sprint("             Auto-select model based on diff size (default true)"))
 	fmt.Println("  ", flagC.Sprint("--type string"), dim.Sprint("      Conventional commit type override (feat, fix, refactor, docs, chore, style, test, perf)"))
 	fmt.Println("  ", flagC.Sprint("--no-commit"), dim.Sprint("        Do not run 'git commit'; just print the message"))
@@ -439,9 +455,12 @@ func printRootUsage() {
 	fmt.Println()
 
 	section.Println("Examples:")
+	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" setup --model openrouter"))
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" setup --model ollama"))
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" down --model ollama"))
+	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" default --model openrouter --version qwen/qwen3-coder:free"))
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" default --model ollama --version qwen2.5-coder:3b"))
+	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" --model openrouter"))
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" --model ollama"))
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" --dry-run"))
 }
@@ -458,10 +477,12 @@ func printSetupUsage() {
 	fmt.Println("Notes:")
 	fmt.Println("  - 'ollama' setup can install the Ollama CLI (with confirmation), start the local service, and pull the selected model.")
 	fmt.Println("  - 'gpt4-o' setup asks for your OpenAI API key and preferred model name.")
+	fmt.Println("  - 'openrouter' setup asks for your OpenRouter API key and lets you pick a free model (e.g., qwen/qwen3-coder:free).")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  gessage setup --model ollama")
 	fmt.Println("  gessage setup --model gpt4-o")
+	fmt.Println("  gessage setup --model openrouter")
 }
 
 func printDownUsage() {
