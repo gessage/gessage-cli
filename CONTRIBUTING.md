@@ -46,6 +46,28 @@ go build -o gessage ./cmd/gessage
 3. Provide a `Setup` function to capture and persist provider config
 4. Optionally implement `Stop` and `Variants`
 
+
+### Build from source
+
+```bash
+go build -o gessage ./cmd/gessage
+```
+
+Cross‑compile examples:
+```bash
+GOOS=darwin GOARCH=arm64 go build -o bin/gessage-darwin-arm64 ./cmd/gessage
+GOOS=darwin GOARCH=amd64 go build -o bin/gessage-darwin-amd64 ./cmd/gessage
+GOOS=linux  GOARCH=arm64 go build -o bin/gessage-linux-arm64  ./cmd/gessage
+GOOS=linux  GOARCH=amd64 go build -o bin/gessage-linux-amd64  ./cmd/gessage
+```
+
+### Troubleshooting
+
+- No staged changes: run `git add` first
+- Model not configured: run `gessage setup`
+- Ollama errors: ensure the daemon is running and the model is pulled
+- OpenAI/OpenRouter errors: check your API key and network connectivity
+
 ### Tests
 
 Currently the project focuses on integration flows. If you add helpers that are easy to unit‑test, include tests.
