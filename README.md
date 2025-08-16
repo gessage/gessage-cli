@@ -40,13 +40,13 @@
 #### Linux & macOS
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/gessage/gessage-cli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/gessage/gessage-cli/refs/heads/main/install.sh | bash
 ```
 
 #### Windows (PowerShell)
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/gessage/gessage-cli/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/gessage/gessage-cli/refs/heads/main/install.ps1 | iex
 ```
 
 #### Verify Installation
