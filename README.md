@@ -43,6 +43,14 @@
 curl -fsSL https://raw.githubusercontent.com/gessage/gessage-cli/refs/heads/main/install.sh | bash
 ```
 
+ Or build all local binaries into `bin/`:
+
+ ```bash
+ chmod +x make_bins.sh
+ ./make_bins.sh
+ ls -lh bin/
+ ```
+
 #### Windows (PowerShell)
 
 ```powershell
@@ -53,6 +61,7 @@ iwr -useb https://raw.githubusercontent.com/gessage/gessage-cli/refs/heads/main/
 
 ```bash
 gessage --help
+gessage --version
 ```
 
 ### 2. Configure a Model

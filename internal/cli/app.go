@@ -27,6 +27,13 @@ func NewApp() *App { return &App{} }
 // Run parses flags, wires dependencies, and executes the main flow.
 // Extend CLI here safely: add subcommands or extra flags without touching deeper layers.
 func (a *App) Run(ctx context.Context, argv []string) error {
+	// Print version early if requested
+	for _, arg := range argv {
+		if arg == "--version" || arg == "-v" {
+			fmt.Println("gessage CLI", Version)
+			return nil
+		}
+	}
 	if len(argv) > 0 && argv[0] == "help" {
 		if len(argv) > 1 && argv[1] == "setup" {
 			printSetupUsage()
@@ -463,6 +470,7 @@ func printRootUsage() {
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" --model openrouter"))
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" --model ollama"))
 	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" --dry-run"))
+	fmt.Println("  ", cmd.Sprint("gessage"), dim.Sprint(" --version | -v"))
 }
 
 func printSetupUsage() {

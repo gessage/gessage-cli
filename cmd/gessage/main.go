@@ -22,5 +22,4 @@ func main() {
 		color.Red("Error: %v", err)
 		os.Exit(1)
 	}
-	color.Green("Done.")
 }
