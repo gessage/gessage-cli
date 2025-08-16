@@ -10,11 +10,11 @@
 
 ## 🚀 Quick Links
 
-- [Quick Start](#quick-start)
-- [Usage](#usage)
-- [🔥 OpenRouter Free Models](#openrouter-free-models)
-- [About the Author](#about-the-author)
-- [License](#license)
+- [Quick Start](#-quick-start)
+- [Usage](#-usage)
+- [🔥 OpenRouter Free Models](#-openrouter-free-models)
+- [About the Author](#-about-the-author)
+- [License](#-license)
 
 ---
 
