@@ -3,7 +3,7 @@ $binary = "gessage"
 $arch = if ([Environment]::Is64BitProcess) { "amd64" } else { "x86" }
 $os = "windows"
 
-$url = "https://github.com/gessage/gessage-cli/releases/download/$version/$binary-$os-$arch.exe"
+$url = "https://github.com/ispooya/gessage-cli/releases/download/$version/$binary-$os-$arch.exe"
 $destination = "$env:USERPROFILE\$binary.exe"
 
 Write-Host "Downloading $url..."

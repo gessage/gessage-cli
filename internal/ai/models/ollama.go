@@ -16,7 +16,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/gessage/gessage/internal/ai"
+	"github.com/ispooya/gessage-cli/internal/ai"
 )
 
 func init() {

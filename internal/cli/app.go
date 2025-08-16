@@ -11,12 +11,12 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/gessage/gessage/internal/ai"
-	"github.com/gessage/gessage/internal/config"
-	"github.com/gessage/gessage/internal/format"
-	"github.com/gessage/gessage/internal/git"
-	"github.com/gessage/gessage/internal/sanitize"
-	"github.com/gessage/gessage/internal/ui"
+	"github.com/ispooya/gessage-cli/internal/ai"
+	"github.com/ispooya/gessage-cli/internal/config"
+	"github.com/ispooya/gessage-cli/internal/format"
+	"github.com/ispooya/gessage-cli/internal/git"
+	"github.com/ispooya/gessage-cli/internal/sanitize"
+	"github.com/ispooya/gessage-cli/internal/ui"
 )
 
 // App encapsulates the CLI surface; keeps logic thin and delegates via DI.

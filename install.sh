@@ -12,7 +12,7 @@ elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
     ARCH="arm64"
 fi
 
-URL="https://github.com/gessage/gessage-cli/releases/download/$VERSION/$BINARY-$OS-$ARCH"
+URL="https://github.com/ispooya/gessage-cli/releases/download/$VERSION/$BINARY-$OS-$ARCH"
 
 echo "Downloading $URL..."
 curl -L $URL -o /tmp/$BINARY

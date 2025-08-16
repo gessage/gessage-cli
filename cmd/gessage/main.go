@@ -6,8 +6,8 @@ import (
 
 	"github.com/fatih/color"
 
-	_ "github.com/gessage/gessage/internal/ai/models"
-	"github.com/gessage/gessage/internal/cli"
+	_ "github.com/ispooya/gessage-cli/internal/ai/models"
+	"github.com/ispooya/gessage-cli/internal/cli"
 )
 
 func main() {

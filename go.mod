@@ -1,4 +1,4 @@
-module github.com/gessage/gessage
+module github.com/ispooya/gessage-cli
 
 go 1.24.6
 

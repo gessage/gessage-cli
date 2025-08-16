@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/gessage/gessage/internal/ai"
-	"github.com/gessage/gessage/internal/ui"
+	"github.com/ispooya/gessage-cli/internal/ai"
+	"github.com/ispooya/gessage-cli/internal/ui"
 )
 
 func init() {

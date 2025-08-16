@@ -22,7 +22,7 @@ build_one() {
   local out="${BIN_DIR}/gessage-${os}-${arch}${ext}"
   echo "==> Building ${out}"
   GOOS="$os" GOARCH="$arch" \
-    go build -trimpath -ldflags "-s -w -X github.com/gessage/gessage-cli/internal/cli.Version=${VERSION}" -o "$out" "$PKG"
+    go build -trimpath -ldflags "-s -w -X github.com/ispooya/gessage-cli/internal/cli.Version=${VERSION}" -o "$out" "$PKG"
 }
 
 build_one darwin  arm64
